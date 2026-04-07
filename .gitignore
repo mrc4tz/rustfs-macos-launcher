@@ -1,0 +1,7 @@
+build/
+*.app
+*.dmg
+*.zip
+*.icns
+*.iconset/
+.DS_Store
