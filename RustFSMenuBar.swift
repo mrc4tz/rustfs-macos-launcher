@@ -692,6 +692,11 @@ class HostsManager {
     static let helperPath = "/usr/local/bin/rustfs-helper"
     static let nginxConfigDir = NSHomeDirectory() + "/Library/Application Support/Herd/config/valet/Nginx"
 
+    // Check if Laravel Herd is installed
+    static var isHerdInstalled: Bool {
+        return FileManager.default.fileExists(atPath: nginxConfigDir)
+    }
+
     // Check if helper is installed (setup done)
     static var isSetupDone: Bool {
         return FileManager.default.fileExists(atPath: helperPath)
@@ -729,47 +734,52 @@ class HostsManager {
         guard !domain.isEmpty else { completion?(); return }
         let cfg = ConfigManager.shared.config
 
-        // Write Herd Nginx configs (no admin needed, user-writable dir)
-        let consoleNginx = """
-        server {
-            listen 127.0.0.1:80;
-            server_name \(domain) www.\(domain);
-            client_max_body_size 0;
-            location / {
-                proxy_pass http://127.0.0.1:\(cfg.consolePort);
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
-                proxy_buffering off;
-                proxy_request_buffering off;
+        // Write Herd Nginx configs only if Herd is installed
+        if isHerdInstalled {
+            let consoleNginx = """
+            server {
+                listen 127.0.0.1:80;
+                server_name \(domain) www.\(domain);
+                client_max_body_size 0;
+                location / {
+                    proxy_pass http://127.0.0.1:\(cfg.consolePort);
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_set_header Upgrade $http_upgrade;
+                    proxy_set_header Connection "upgrade";
+                    proxy_buffering off;
+                    proxy_request_buffering off;
+                }
+                access_log off;
             }
-            access_log off;
-        }
-        """
+            """
 
-        let apiNginx = """
-        server {
-            listen 127.0.0.1:80;
-            server_name api.\(domain);
-            client_max_body_size 0;
-            location / {
-                proxy_pass http://127.0.0.1:\(cfg.apiPort);
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-                proxy_buffering off;
-                proxy_request_buffering off;
+            let apiNginx = """
+            server {
+                listen 127.0.0.1:80;
+                server_name api.\(domain);
+                client_max_body_size 0;
+                location / {
+                    proxy_pass http://127.0.0.1:\(cfg.apiPort);
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    proxy_buffering off;
+                    proxy_request_buffering off;
+                }
+                access_log off;
             }
-            access_log off;
-        }
-        """
+            """
 
-        try? consoleNginx.write(toFile: "\(nginxConfigDir)/\(domain)", atomically: true, encoding: .utf8)
-        try? apiNginx.write(toFile: "\(nginxConfigDir)/api.\(domain)", atomically: true, encoding: .utf8)
+            try? consoleNginx.write(toFile: "\(nginxConfigDir)/\(domain)", atomically: true, encoding: .utf8)
+            try? apiNginx.write(toFile: "\(nginxConfigDir)/api.\(domain)", atomically: true, encoding: .utf8)
+            NSLog("RustFS: Herd detected, Nginx configs written")
+        } else {
+            NSLog("RustFS: Herd not installed, skipping Nginx config")
+        }
 
         // Update hosts + reload nginx via helper (no password)
         runHelper(["hosts-add", domain, "\(cfg.consolePort)", "\(cfg.apiPort)"]) {
@@ -781,9 +791,11 @@ class HostsManager {
     static func removeDomain(completion: (() -> Void)? = nil) {
         let domain = ConfigManager.shared.config.domain
 
-        // Remove nginx configs
-        try? FileManager.default.removeItem(atPath: "\(nginxConfigDir)/\(domain)")
-        try? FileManager.default.removeItem(atPath: "\(nginxConfigDir)/api.\(domain)")
+        // Remove nginx configs only if Herd is installed
+        if isHerdInstalled {
+            try? FileManager.default.removeItem(atPath: "\(nginxConfigDir)/\(domain)")
+            try? FileManager.default.removeItem(atPath: "\(nginxConfigDir)/api.\(domain)")
+        }
 
         // Remove hosts + reload nginx via helper (no password)
         runHelper(["hosts-remove"]) {
@@ -876,11 +888,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if !cfg.domain.isEmpty {
             let domInfo = NSMenuItem(title: "  Domain: \(cfg.domain)", action: nil, keyEquivalent: "")
             domInfo.isEnabled = false
-            let domText = running
-                ? "  \(cfg.domain) → Console  |  api.\(cfg.domain) → API"
-                : "  Domain: \(cfg.domain)"
+            let herdOK = HostsManager.isHerdInstalled
+            let domText: String
+            if running && herdOK {
+                domText = "  \(cfg.domain) → Console  |  api.\(cfg.domain) → API"
+            } else if running && !herdOK {
+                domText = "  Domain: \(cfg.domain) (Herd not installed)"
+            } else {
+                domText = "  Domain: \(cfg.domain)"
+            }
             domInfo.attributedTitle = NSAttributedString(string: domText,
-                attributes: [.font: NSFont.monospacedSystemFont(ofSize: 11, weight: .regular), .foregroundColor: NSColor.secondaryLabelColor])
+                attributes: [.font: NSFont.monospacedSystemFont(ofSize: 11, weight: .regular),
+                              .foregroundColor: (running && !herdOK) ? NSColor.systemOrange : NSColor.secondaryLabelColor])
             menu.addItem(domInfo)
         }
 
@@ -921,7 +940,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         api.isEnabled = running
         menu.addItem(api)
 
-        if !cfg.domain.isEmpty {
+        if !cfg.domain.isEmpty && HostsManager.isHerdInstalled {
             let consoleAlias = NSMenuItem(title: "\(L.s("menu.openConsole")) — \(cfg.domain)", action: #selector(openConsoleAlias), keyEquivalent: "")
             consoleAlias.target = self
             consoleAlias.isEnabled = running
