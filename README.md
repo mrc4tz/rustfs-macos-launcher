@@ -27,7 +27,7 @@ Menu bar showing server status, ports, domain, and active credential:
 ┌─────────────────────────────────┐
 │ RustFS Object Storage           │
 │─────────────────────────────────│
-│ ● Server Aktif                  │
+│ ● Server Active                 │
 │   API :9000  |  Console :9001   │
 │   rustfs.local → Console        │
 │   Credential: default           │
@@ -35,15 +35,15 @@ Menu bar showing server status, ports, domain, and active credential:
 │ Start/Stop Server          ⌘S   │
 │ Restart Server             ⌘R   │
 │─────────────────────────────────│
-│ Buka Console (:9001)       ⌘O   │
-│ Buka API (:9000)                │
-│ Buka Console — rustfs.local     │
-│ Buka API — api.rustfs.local     │
+│ Open Console (:9001)       ⌘O   │
+│ Open API (:9000)                │
+│ Open Console — rustfs.local     │
+│ Open API — api.rustfs.local     │
 │─────────────────────────────────│
-│ Lihat Log                  ⌘L   │
-│ Buka Data Folder                │
+│ View Log                   ⌘L   │
+│ Open Data Folder                │
 │─────────────────────────────────│
-│ Pengaturan...              ⌘,   │
+│ Settings...                ⌘,   │
 │─────────────────────────────────│
 │ Quit RustFS                ⌘Q   │
 └─────────────────────────────────┘
