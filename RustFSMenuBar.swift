@@ -1,6 +1,94 @@
 import Cocoa
 import ServiceManagement
 
+// MARK: - Localization
+
+class L {
+    static var lang: String { ConfigManager.shared.config.language }
+
+    private static let strings: [String: [String: String]] = [
+        // Menu
+        "menu.header":              ["en": "RustFS Object Storage",      "id": "RustFS Object Storage"],
+        "menu.server.active":       ["en": "● Server Active",            "id": "● Server Aktif"],
+        "menu.server.stopped":      ["en": "○ Server Stopped",           "id": "○ Server Mati"],
+        "menu.start":               ["en": "Start Server",               "id": "Start Server"],
+        "menu.stop":                ["en": "Stop Server",                "id": "Stop Server"],
+        "menu.restart":             ["en": "Restart Server",             "id": "Restart Server"],
+        "menu.openConsole":         ["en": "Open Console",               "id": "Buka Console"],
+        "menu.openAPI":             ["en": "Open API",                   "id": "Buka API"],
+        "menu.viewLog":             ["en": "View Log",                   "id": "Lihat Log"],
+        "menu.openDataFolder":      ["en": "Open Data Folder",          "id": "Buka Data Folder"],
+        "menu.settings":            ["en": "Settings...",                "id": "Pengaturan..."],
+        "menu.quit":                ["en": "Quit RustFS",                "id": "Keluar RustFS"],
+
+        // Settings window
+        "settings.title":           ["en": "RustFS - Settings",          "id": "RustFS - Pengaturan"],
+        "settings.tab.general":     ["en": "General",                    "id": "Umum"],
+        "settings.tab.credentials": ["en": "Credentials",                "id": "Credentials"],
+        "settings.save":            ["en": "Save",                       "id": "Simpan"],
+        "settings.cancel":          ["en": "Cancel",                     "id": "Batal"],
+
+        // General tab
+        "general.portAPI":          ["en": "API Port:",                  "id": "Port API:"],
+        "general.portConsole":      ["en": "Console Port:",              "id": "Port Console:"],
+        "general.domain":           ["en": "Domain Alias:",              "id": "Domain Alias:"],
+        "general.dataFolder":       ["en": "Data Folder:",               "id": "Data Folder:"],
+        "general.binary":           ["en": "RustFS Binary:",             "id": "RustFS Binary:"],
+        "general.language":         ["en": "Language:",                   "id": "Bahasa:"],
+        "general.launchAtLogin":    ["en": "Launch at login",            "id": "Jalankan otomatis saat login"],
+        "general.info":             ["en": "If the server is running, saving settings will automatically restart it. Domain alias requires administrator privileges to modify /etc/hosts.",
+                                      "id": "Jika server sedang berjalan, perubahan pengaturan akan otomatis me-restart server. Domain alias memerlukan izin administrator untuk mengubah /etc/hosts."],
+        "general.browse":           ["en": "Browse",                     "id": "Browse"],
+        "general.pickFolder":       ["en": "Select Folder",              "id": "Pilih Folder"],
+        "general.pickBinary":       ["en": "Select Binary",              "id": "Pilih Binary"],
+
+        // Credentials tab
+        "cred.active":              ["en": "Active",                     "id": "Aktif"],
+        "cred.name":                ["en": "Name",                       "id": "Nama"],
+        "cred.add":                 ["en": "Add",                        "id": "Tambah"],
+        "cred.edit":                ["en": "Edit",                       "id": "Edit"],
+        "cred.delete":              ["en": "Delete",                     "id": "Hapus"],
+        "cred.setActive":           ["en": "Set Active",                 "id": "Set Aktif"],
+        "cred.addTitle":            ["en": "Add Credential",             "id": "Tambah Credential"],
+        "cred.editTitle":           ["en": "Edit Credential",            "id": "Edit Credential"],
+        "cred.namePlaceholder":     ["en": "Credential name",            "id": "Nama credential"],
+        "cred.nameLabel":           ["en": "Name:",                      "id": "Nama:"],
+        "cred.selectEdit":          ["en": "Select a credential to edit",    "id": "Pilih credential yang ingin diedit"],
+        "cred.selectDelete":        ["en": "Select a credential to delete",  "id": "Pilih credential yang ingin dihapus"],
+        "cred.selectActive":        ["en": "Select a credential to activate","id": "Pilih credential yang ingin diaktifkan"],
+        "cred.confirmDelete":       ["en": "Delete credential",          "id": "Hapus credential"],
+        "cred.cannotUndo":          ["en": "This action cannot be undone.","id": "Tindakan ini tidak bisa dibatalkan."],
+        "cred.allRequired":         ["en": "All fields are required",    "id": "Semua field harus diisi"],
+
+        // Validation
+        "val.portAPIInvalid":       ["en": "API Port is invalid (1-65535)",           "id": "Port API tidak valid (1-65535)"],
+        "val.portConsoleInvalid":   ["en": "Console Port is invalid (1-65535)",       "id": "Port Console tidak valid (1-65535)"],
+        "val.portsSame":            ["en": "API and Console ports cannot be the same","id": "Port API dan Console tidak boleh sama"],
+        "val.dataEmpty":            ["en": "Data folder cannot be empty",             "id": "Data folder tidak boleh kosong"],
+        "val.binEmpty":             ["en": "Binary path cannot be empty",             "id": "Path binary tidak boleh kosong"],
+
+        // Notifications
+        "notify.saved":             ["en": "Settings saved.",                          "id": "Pengaturan berhasil disimpan."],
+        "notify.setupDone":         ["en": "Setup complete! Touch ID enabled for sudo.","id": "Setup selesai! Touch ID aktif untuk sudo."],
+        "notify.alreadyRunning":    ["en": "RustFS is already running!",               "id": "RustFS sudah berjalan!"],
+        "notify.binaryNotFound":    ["en": "RustFS binary not found:",                 "id": "Binary rustfs tidak ditemukan:"],
+        "notify.serverStarted":     ["en": "Server started! Console:",                 "id": "Server aktif! Console:"],
+        "notify.startFailed":       ["en": "Failed to start:",                         "id": "Gagal start:"],
+        "notify.stopFailed":        ["en": "Failed to stop: server still running.",    "id": "Gagal stop: server masih berjalan."],
+        "notify.serverStopped":     ["en": "Server stopped.",                          "id": "Server dihentikan."],
+        "notify.noLog":             ["en": "No log available yet.",                    "id": "Belum ada log tersedia."],
+
+        // Error extraction
+        "err.portInUse":            ["en": "Port already in use. Check for other processes.", "id": "Port sudah digunakan. Cek apakah ada proses lain di port yang sama."],
+        "err.noOutput":             ["en": "No output. Check binary and data folder paths.", "id": "Tidak ada output. Cek path binary dan data folder."],
+        "err.unknown":              ["en": "Unknown error",                                   "id": "Error tidak diketahui"],
+    ]
+
+    static func s(_ key: String) -> String {
+        return strings[key]?[lang] ?? strings[key]?["en"] ?? key
+    }
+}
+
 // MARK: - Config Model
 
 struct Credential: Codable {
@@ -18,6 +106,7 @@ struct AppConfig: Codable {
     var dataPath: String
     var rustfsBin: String
     var launchAtLogin: Bool
+    var language: String
     var credentials: [Credential]
 
     static func defaultConfig() -> AppConfig {
@@ -28,6 +117,7 @@ struct AppConfig: Codable {
             dataPath: NSHomeDirectory() + "/rustfs-files",
             rustfsBin: NSHomeDirectory() + "/rustfs",
             launchAtLogin: true,
+            language: "en",
             credentials: [
                 Credential(id: UUID().uuidString, name: "default", accessKey: "admin", secretKey: "admin", active: true)
             ]
@@ -123,7 +213,7 @@ class CredentialEditorController: NSObject {
 
         let content = window.contentView!
 
-        let labels = ["Nama:", "Access Key:", "Secret Key:"]
+        let labels = [L.s("cred.nameLabel"), "Access Key:", "Secret Key:"]
         let yPositions = [150, 110, 70]
 
         for (i, label) in labels.enumerated() {
@@ -135,7 +225,7 @@ class CredentialEditorController: NSObject {
 
         nameField = NSTextField(frame: NSRect(x: 130, y: 150, width: 245, height: 24))
         nameField.stringValue = name
-        nameField.placeholderString = "Nama credential"
+        nameField.placeholderString = L.s("cred.namePlaceholder")
         content.addSubview(nameField)
 
         accessKeyField = NSTextField(frame: NSRect(x: 130, y: 110, width: 245, height: 24))
@@ -148,12 +238,12 @@ class CredentialEditorController: NSObject {
         secretKeyField.placeholderString = "Secret key"
         content.addSubview(secretKeyField)
 
-        let cancelBtn = NSButton(title: "Batal", target: self, action: #selector(cancel))
+        let cancelBtn = NSButton(title: L.s("settings.cancel"), target: self, action: #selector(cancel))
         cancelBtn.frame = NSRect(x: 210, y: 20, width: 80, height: 32)
         cancelBtn.bezelStyle = .rounded
         content.addSubview(cancelBtn)
 
-        let saveBtn = NSButton(title: "Simpan", target: self, action: #selector(saveAction))
+        let saveBtn = NSButton(title: L.s("settings.save"), target: self, action: #selector(saveAction))
         saveBtn.frame = NSRect(x: 295, y: 20, width: 80, height: 32)
         saveBtn.bezelStyle = .rounded
         saveBtn.keyEquivalent = "\r"
@@ -173,7 +263,7 @@ class CredentialEditorController: NSObject {
         let sk = secretKeyField.stringValue.trimmingCharacters(in: .whitespaces)
         guard !n.isEmpty, !ak.isEmpty, !sk.isEmpty else {
             let alert = NSAlert()
-            alert.messageText = "Semua field harus diisi"
+            alert.messageText = L.s("cred.allRequired")
             alert.runModal()
             return
         }
@@ -196,6 +286,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
     var dataPathField: NSTextField!
     var binPathField: NSTextField!
     var launchAtLoginCheckbox: NSButton!
+    var languagePopup: NSPopUpButton!
 
     // Credentials tab
     var tableView: NSTableView!
@@ -218,30 +309,30 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
     func buildWindow() {
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 420),
                           styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "RustFS - Pengaturan"
+        window.title = L.s("settings.title")
         window.isReleasedWhenClosed = false
 
         tabView = NSTabView(frame: NSRect(x: 10, y: 50, width: 500, height: 360))
 
         let generalTab = NSTabViewItem(identifier: "general")
-        generalTab.label = "Umum"
+        generalTab.label = L.s("settings.tab.general")
         generalTab.view = buildGeneralTab()
         tabView.addTabViewItem(generalTab)
 
         let credTab = NSTabViewItem(identifier: "credentials")
-        credTab.label = "Credentials"
+        credTab.label = L.s("settings.tab.credentials")
         credTab.view = buildCredentialsTab()
         tabView.addTabViewItem(credTab)
 
         window.contentView!.addSubview(tabView)
 
-        let saveBtn = NSButton(title: "Simpan", target: self, action: #selector(saveSettings))
+        let saveBtn = NSButton(title: L.s("settings.save"), target: self, action: #selector(saveSettings))
         saveBtn.frame = NSRect(x: 420, y: 10, width: 90, height: 32)
         saveBtn.bezelStyle = .rounded
         saveBtn.keyEquivalent = "\r"
         window.contentView!.addSubview(saveBtn)
 
-        let cancelBtn = NSButton(title: "Batal", target: self, action: #selector(closeWindow))
+        let cancelBtn = NSButton(title: L.s("settings.cancel"), target: self, action: #selector(closeWindow))
         cancelBtn.frame = NSRect(x: 325, y: 10, width: 90, height: 32)
         cancelBtn.bezelStyle = .rounded
         cancelBtn.keyEquivalent = "\u{1b}"
@@ -252,19 +343,19 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         let view = NSView(frame: NSRect(x: 0, y: 0, width: 490, height: 310))
         let cfg = ConfigManager.shared.config
 
-        // Row positions (top to bottom, spaced 34px apart)
         let row1: CGFloat = 270  // Port API
         let row2: CGFloat = 236  // Port Console
         let row3: CGFloat = 202  // Domain Alias
         let row4: CGFloat = 168  // Data Folder
         let row5: CGFloat = 134  // RustFS Binary
-        let row6: CGFloat = 100  // Launch at login
+        let row6: CGFloat = 100  // Language
+        let row7: CGFloat = 72   // Launch at login
 
-        let labels = ["Port API:", "Port Console:", "Domain Alias:", "Data Folder:", "RustFS Binary:"]
-        let yPos: [CGFloat] = [row1, row2, row3, row4, row5]
+        let labelKeys = ["general.portAPI", "general.portConsole", "general.domain", "general.dataFolder", "general.binary", "general.language"]
+        let yPos: [CGFloat] = [row1, row2, row3, row4, row5, row6]
 
-        for (i, label) in labels.enumerated() {
-            let l = NSTextField(labelWithString: label)
+        for (i, key) in labelKeys.enumerated() {
+            let l = NSTextField(labelWithString: L.s(key))
             l.frame = NSRect(x: 15, y: yPos[i], width: 110, height: 22)
             l.alignment = .right
             view.addSubview(l)
@@ -302,7 +393,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         dataPathField.placeholderString = NSHomeDirectory() + "/rustfs-files"
         view.addSubview(dataPathField)
 
-        let browseDataBtn = NSButton(title: "Browse", target: self, action: #selector(browseDataPath))
+        let browseDataBtn = NSButton(title: L.s("general.browse"), target: self, action: #selector(browseDataPath))
         browseDataBtn.frame = NSRect(x: 420, y: row4 - 2, width: 55, height: 28)
         browseDataBtn.bezelStyle = .rounded
         browseDataBtn.font = NSFont.systemFont(ofSize: 11)
@@ -313,24 +404,28 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         binPathField.placeholderString = NSHomeDirectory() + "/rustfs"
         view.addSubview(binPathField)
 
-        let browseBinBtn = NSButton(title: "Browse", target: self, action: #selector(browseBinPath))
+        let browseBinBtn = NSButton(title: L.s("general.browse"), target: self, action: #selector(browseBinPath))
         browseBinBtn.frame = NSRect(x: 420, y: row5 - 2, width: 55, height: 28)
         browseBinBtn.bezelStyle = .rounded
         browseBinBtn.font = NSFont.systemFont(ofSize: 11)
         view.addSubview(browseBinBtn)
 
-        launchAtLoginCheckbox = NSButton(checkboxWithTitle: "Jalankan otomatis saat login", target: nil, action: nil)
-        launchAtLoginCheckbox.frame = NSRect(x: 135, y: row6, width: 300, height: 20)
+        languagePopup = NSPopUpButton(frame: NSRect(x: 135, y: row6 - 2, width: 150, height: 26))
+        languagePopup.addItems(withTitles: ["English", "Indonesia"])
+        languagePopup.selectItem(withTitle: cfg.language == "id" ? "Indonesia" : "English")
+        view.addSubview(languagePopup)
+
+        launchAtLoginCheckbox = NSButton(checkboxWithTitle: L.s("general.launchAtLogin"), target: nil, action: nil)
+        launchAtLoginCheckbox.frame = NSRect(x: 135, y: row7, width: 300, height: 20)
         launchAtLoginCheckbox.state = cfg.launchAtLogin ? .on : .off
         view.addSubview(launchAtLoginCheckbox)
 
-        // Separator line
-        let separator = NSBox(frame: NSRect(x: 15, y: 75, width: 460, height: 1))
+        let separator = NSBox(frame: NSRect(x: 15, y: 55, width: 460, height: 1))
         separator.boxType = .separator
         view.addSubview(separator)
 
-        let infoBox = NSTextField(wrappingLabelWithString: "Jika server sedang berjalan, perubahan pengaturan akan otomatis me-restart server. Domain alias memerlukan izin administrator untuk mengubah /etc/hosts.")
-        infoBox.frame = NSRect(x: 15, y: 15, width: 460, height: 50)
+        let infoBox = NSTextField(wrappingLabelWithString: L.s("general.info"))
+        infoBox.frame = NSRect(x: 15, y: 5, width: 460, height: 45)
         infoBox.textColor = .secondaryLabelColor
         infoBox.font = NSFont.systemFont(ofSize: 11)
         view.addSubview(infoBox)
@@ -352,12 +447,12 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         tableView.usesAlternatingRowBackgroundColors = true
 
         let colActive = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("active"))
-        colActive.title = "Aktif"
+        colActive.title = L.s("cred.active")
         colActive.width = 40
         tableView.addTableColumn(colActive)
 
         let colName = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("name"))
-        colName.title = "Nama"
+        colName.title = L.s("cred.name")
         colName.width = 120
         tableView.addTableColumn(colName)
 
@@ -374,22 +469,22 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         scrollView.documentView = tableView
         view.addSubview(scrollView)
 
-        let addBtn = NSButton(title: "Tambah", target: self, action: #selector(addCredential))
+        let addBtn = NSButton(title: L.s("cred.add"), target: self, action: #selector(addCredential))
         addBtn.frame = NSRect(x: 15, y: 12, width: 80, height: 28)
         addBtn.bezelStyle = .rounded
         view.addSubview(addBtn)
 
-        let editBtn = NSButton(title: "Edit", target: self, action: #selector(editCredential))
+        let editBtn = NSButton(title: L.s("cred.edit"), target: self, action: #selector(editCredential))
         editBtn.frame = NSRect(x: 100, y: 12, width: 70, height: 28)
         editBtn.bezelStyle = .rounded
         view.addSubview(editBtn)
 
-        let delBtn = NSButton(title: "Hapus", target: self, action: #selector(deleteCredential))
+        let delBtn = NSButton(title: L.s("cred.delete"), target: self, action: #selector(deleteCredential))
         delBtn.frame = NSRect(x: 175, y: 12, width: 70, height: 28)
         delBtn.bezelStyle = .rounded
         view.addSubview(delBtn)
 
-        let activeBtn = NSButton(title: "Set Aktif", target: self, action: #selector(setActiveCredential))
+        let activeBtn = NSButton(title: L.s("cred.setActive"), target: self, action: #selector(setActiveCredential))
         activeBtn.frame = NSRect(x: 250, y: 12, width: 80, height: 28)
         activeBtn.bezelStyle = .rounded
         view.addSubview(activeBtn)
@@ -404,7 +499,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
-        panel.prompt = "Pilih Folder"
+        panel.prompt = L.s("general.pickFolder")
         if panel.runModal() == .OK, let url = panel.url {
             dataPathField.stringValue = url.path
         }
@@ -414,7 +509,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         let panel = NSOpenPanel()
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.prompt = "Pilih Binary"
+        panel.prompt = L.s("general.pickBinary")
         if panel.runModal() == .OK, let url = panel.url {
             binPathField.stringValue = url.path
         }
@@ -424,7 +519,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
 
     @objc func addCredential() {
         credEditor = CredentialEditorController()
-        credEditor?.show(parent: window, title: "Tambah Credential") { [weak self] name, ak, sk in
+        credEditor?.show(parent: window, title: L.s("cred.addTitle")) { [weak self] name, ak, sk in
             let cred = Credential(id: UUID().uuidString, name: name, accessKey: ak, secretKey: sk, active: false)
             ConfigManager.shared.addCredential(cred)
             self?.tableView.reloadData()
@@ -434,12 +529,12 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
     @objc func editCredential() {
         let row = tableView.selectedRow
         guard row >= 0 else {
-            let a = NSAlert(); a.messageText = "Pilih credential yang ingin diedit"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("cred.selectEdit"); a.runModal()
             return
         }
         let cred = ConfigManager.shared.config.credentials[row]
         credEditor = CredentialEditorController()
-        credEditor?.show(parent: window, name: cred.name, accessKey: cred.accessKey, secretKey: cred.secretKey, title: "Edit Credential") { [weak self] name, ak, sk in
+        credEditor?.show(parent: window, name: cred.name, accessKey: cred.accessKey, secretKey: cred.secretKey, title: L.s("cred.editTitle")) { [weak self] name, ak, sk in
             var updated = cred
             updated.name = name; updated.accessKey = ak; updated.secretKey = sk
             ConfigManager.shared.updateCredential(at: row, updated)
@@ -450,15 +545,15 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
     @objc func deleteCredential() {
         let row = tableView.selectedRow
         guard row >= 0 else {
-            let a = NSAlert(); a.messageText = "Pilih credential yang ingin dihapus"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("cred.selectDelete"); a.runModal()
             return
         }
         let cred = ConfigManager.shared.config.credentials[row]
         let alert = NSAlert()
-        alert.messageText = "Hapus credential \"\(cred.name)\"?"
-        alert.informativeText = "Tindakan ini tidak bisa dibatalkan."
-        alert.addButton(withTitle: "Hapus")
-        alert.addButton(withTitle: "Batal")
+        alert.messageText = "\(L.s("cred.confirmDelete")) \"\(cred.name)\"?"
+        alert.informativeText = L.s("cred.cannotUndo")
+        alert.addButton(withTitle: L.s("cred.delete"))
+        alert.addButton(withTitle: L.s("settings.cancel"))
         alert.alertStyle = .warning
         if alert.runModal() == .alertFirstButtonReturn {
             ConfigManager.shared.deleteCredential(at: row)
@@ -469,7 +564,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
     @objc func setActiveCredential() {
         let row = tableView.selectedRow
         guard row >= 0 else {
-            let a = NSAlert(); a.messageText = "Pilih credential yang ingin diaktifkan"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("cred.selectActive"); a.runModal()
             return
         }
         let cred = ConfigManager.shared.config.credentials[row]
@@ -481,15 +576,15 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
 
     @objc func saveSettings() {
         guard let api = Int(apiPortField.stringValue), api > 0, api <= 65535 else {
-            let a = NSAlert(); a.messageText = "Port API tidak valid (1-65535)"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("val.portAPIInvalid"); a.runModal()
             return
         }
         guard let console = Int(consolePortField.stringValue), console > 0, console <= 65535 else {
-            let a = NSAlert(); a.messageText = "Port Console tidak valid (1-65535)"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("val.portConsoleInvalid"); a.runModal()
             return
         }
         guard api != console else {
-            let a = NSAlert(); a.messageText = "Port API dan Console tidak boleh sama"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("val.portsSame"); a.runModal()
             return
         }
 
@@ -497,11 +592,11 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         let binPath = binPathField.stringValue.trimmingCharacters(in: .whitespaces)
 
         guard !dataPath.isEmpty else {
-            let a = NSAlert(); a.messageText = "Data folder tidak boleh kosong"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("val.dataEmpty"); a.runModal()
             return
         }
         guard !binPath.isEmpty else {
-            let a = NSAlert(); a.messageText = "Path binary tidak boleh kosong"; a.runModal()
+            let a = NSAlert(); a.messageText = L.s("val.binEmpty"); a.runModal()
             return
         }
 
@@ -512,6 +607,7 @@ class SettingsWindowController: NSObject, NSTableViewDelegate, NSTableViewDataSo
         cfg.config.dataPath = dataPath
         cfg.config.rustfsBin = binPath
         cfg.config.launchAtLogin = launchAtLoginCheckbox.state == .on
+        cfg.config.language = languagePopup.titleOfSelectedItem == "Indonesia" ? "id" : "en"
         cfg.save()
 
         // Apply launch at login
@@ -715,7 +811,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         settingsController.onSettingsChanged = { [weak self] in
             guard let s = self else { return }
             s.buildMenu()
-            s.notify("Pengaturan berhasil disimpan.")
+            s.notify(L.s("notify.saved"))
             if s.isRunning() {
                 s.restartServer()
             }
@@ -727,7 +823,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Auto-setup on first launch (single password prompt, then never again)
         if !HostsManager.isSetupDone {
             HostsManager.setup { [weak self] in
-                self?.notify("Setup selesai! Touch ID aktif untuk sudo.")
+                self?.notify(L.s("notify.setupDone"))
                 self?.buildMenu()
             }
         }
@@ -752,15 +848,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let running = isRunning()
 
         // Header
-        let header = NSMenuItem(title: "RustFS Object Storage", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: L.s("menu.header"), action: nil, keyEquivalent: "")
         header.isEnabled = false
-        header.attributedTitle = NSAttributedString(string: "RustFS Object Storage",
+        header.attributedTitle = NSAttributedString(string: L.s("menu.header"),
             attributes: [.font: NSFont.boldSystemFont(ofSize: 13)])
         menu.addItem(header)
         menu.addItem(NSMenuItem.separator())
 
         // Status
-        let statusText = running ? "● Server Aktif" : "○ Server Mati"
+        let statusText = running ? L.s("menu.server.active") : L.s("menu.server.stopped")
         let si = NSMenuItem(title: statusText, action: nil, keyEquivalent: "")
         si.isEnabled = false
         si.attributedTitle = NSAttributedString(string: statusText,
@@ -799,39 +895,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         if running {
-            let stop = NSMenuItem(title: "Stop Server", action: #selector(stopServer), keyEquivalent: "s")
+            let stop = NSMenuItem(title: L.s("menu.stop"), action: #selector(stopServer), keyEquivalent: "s")
             stop.target = self
             menu.addItem(stop)
         } else {
-            let start = NSMenuItem(title: "Start Server", action: #selector(startServer), keyEquivalent: "s")
+            let start = NSMenuItem(title: L.s("menu.start"), action: #selector(startServer), keyEquivalent: "s")
             start.target = self
             menu.addItem(start)
         }
 
-        let restart = NSMenuItem(title: "Restart Server", action: #selector(restartServer), keyEquivalent: "r")
+        let restart = NSMenuItem(title: L.s("menu.restart"), action: #selector(restartServer), keyEquivalent: "r")
         restart.target = self
         restart.isEnabled = running
         menu.addItem(restart)
 
         menu.addItem(NSMenuItem.separator())
 
-        let console = NSMenuItem(title: "Buka Console (:\(cfg.consolePort))", action: #selector(openConsolePort), keyEquivalent: "o")
+        let console = NSMenuItem(title: "\(L.s("menu.openConsole")) (:\(cfg.consolePort))", action: #selector(openConsolePort), keyEquivalent: "o")
         console.target = self
         console.isEnabled = running
         menu.addItem(console)
 
-        let api = NSMenuItem(title: "Buka API (:\(cfg.apiPort))", action: #selector(openAPIPort), keyEquivalent: "")
+        let api = NSMenuItem(title: "\(L.s("menu.openAPI")) (:\(cfg.apiPort))", action: #selector(openAPIPort), keyEquivalent: "")
         api.target = self
         api.isEnabled = running
         menu.addItem(api)
 
         if !cfg.domain.isEmpty {
-            let consoleAlias = NSMenuItem(title: "Buka Console — \(cfg.domain)", action: #selector(openConsoleAlias), keyEquivalent: "")
+            let consoleAlias = NSMenuItem(title: "\(L.s("menu.openConsole")) — \(cfg.domain)", action: #selector(openConsoleAlias), keyEquivalent: "")
             consoleAlias.target = self
             consoleAlias.isEnabled = running
             menu.addItem(consoleAlias)
 
-            let apiAlias = NSMenuItem(title: "Buka API — api.\(cfg.domain)", action: #selector(openAPIAlias), keyEquivalent: "")
+            let apiAlias = NSMenuItem(title: "\(L.s("menu.openAPI")) — api.\(cfg.domain)", action: #selector(openAPIAlias), keyEquivalent: "")
             apiAlias.target = self
             apiAlias.isEnabled = running
             menu.addItem(apiAlias)
@@ -839,23 +935,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let log = NSMenuItem(title: "Lihat Log", action: #selector(openLogs), keyEquivalent: "l")
+        let log = NSMenuItem(title: L.s("menu.viewLog"), action: #selector(openLogs), keyEquivalent: "l")
         log.target = self
         menu.addItem(log)
 
-        let data = NSMenuItem(title: "Buka Data Folder", action: #selector(openDataFolder), keyEquivalent: "")
+        let data = NSMenuItem(title: L.s("menu.openDataFolder"), action: #selector(openDataFolder), keyEquivalent: "")
         data.target = self
         menu.addItem(data)
 
         menu.addItem(NSMenuItem.separator())
 
-        let settings = NSMenuItem(title: "Pengaturan...", action: #selector(openSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: L.s("menu.settings"), action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
 
         menu.addItem(NSMenuItem.separator())
 
-        let quit = NSMenuItem(title: "Quit RustFS", action: #selector(quitApp), keyEquivalent: "q")
+        let quit = NSMenuItem(title: L.s("menu.quit"), action: #selector(quitApp), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
 
@@ -919,13 +1015,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func startServer() {
         if isRunning() {
-            notify("RustFS sudah berjalan!")
+            notify(L.s("notify.alreadyRunning"))
             return
         }
 
         // Validate binary
         guard FileManager.default.isExecutableFile(atPath: cfg.rustfsBin) else {
-            notify("Binary rustfs tidak ditemukan: \(cfg.rustfsBin)")
+            notify("\(L.s("notify.binaryNotFound")) \(cfg.rustfsBin)")
             return
         }
 
@@ -1005,17 +1101,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let s = self else { return }
                 s.refreshStatus()
                 if s.isRunning() {
-                    s.notify("Server aktif! Console: http://localhost:\(s.cfg.consolePort)")
+                    s.notify("\(L.s("notify.serverStarted")) http://localhost:\(s.cfg.consolePort)")
                 } else {
                     let logContent = (try? String(contentsOfFile: logPath, encoding: .utf8)) ?? ""
                     // Extract meaningful error from log
                     let errorMsg = s.extractError(from: logContent)
                     NSLog("RustFS start failed. Log: \(logContent.suffix(500))")
-                    s.notify("Gagal start: \(errorMsg)")
+                    s.notify("\(L.s("notify.startFailed")) \(errorMsg)")
                 }
             }
         } catch {
-            notify("Gagal start: \(error.localizedDescription)")
+            notify("\(L.s("notify.startFailed")) \(error.localizedDescription)")
             NSLog("RustFS Process.run() error: \(error)")
         }
     }
@@ -1044,9 +1140,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             guard let s = self else { return }
             s.refreshStatus()
             if s.isRunning() {
-                s.notify("Gagal stop: server masih berjalan. Coba restart atau kill manual.")
+                s.notify(L.s("notify.stopFailed"))
             } else {
-                s.notify("Server dihentikan.")
+                s.notify(L.s("notify.serverStopped"))
             }
         }
     }
@@ -1097,7 +1193,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if FileManager.default.fileExists(atPath: logFile) {
             NSWorkspace.shared.open(URL(fileURLWithPath: logFile))
         } else {
-            notify("Belum ada log tersedia.")
+            notify(L.s("notify.noLog"))
         }
     }
 
@@ -1190,13 +1286,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         // Check for common issues
         if logContent.contains("Address already in use") || logContent.contains("AddrInUse") {
-            return "Port sudah digunakan. Cek apakah ada proses lain di port yang sama."
+            return L.s("err.portInUse")
         }
         if logContent.isEmpty {
-            return "Tidak ada output. Cek path binary dan data folder."
+            return L.s("err.noOutput")
         }
         // Return last line
-        return String((lines.last ?? "Error tidak diketahui").prefix(150))
+        return String((lines.last ?? L.s("err.unknown")).prefix(150))
     }
 }
 
